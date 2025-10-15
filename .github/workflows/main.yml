@@ -1,0 +1,46 @@
+name mypythonC1
+
+on:
+  push:
+  pull_request:
+
+permission:
+  content: read
+
+jobs:
+   test
+     runs-on: ubuntu-latest
+     startegy:
+     matrix:
+        python-version: [ "3.10", "3.11", "3.12" ]
+    steps:
+     - name: checkout
+       uses: action/checkout@v4
+
+      - name: python
+        uses: action/python@v5
+      with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install dependencies (if requirements.txt exists)
+        run: |
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Lint with flake8 (if config or file present)
+        run: |
+          pip install flake8 >/dev/null 2>&1 || true
+          if [ -f setup.cfg ] || [ -f tox.ini ] || [ -f .flake8 ] || [ -d . ]; then
+            flake8 . || true
+          fi
+
+      - name: Run tests with pytest (if tests/ exists)
+        run: |
+          if [ -d tests ]; then
+            pip install pytest >/dev/null 2>&1 || true
+            pytest -q
+          else
+            echo "No tests directory; skipping."
+          fi
+
+  
